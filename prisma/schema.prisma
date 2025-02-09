@@ -1,0 +1,98 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+model Admin {
+    id                       String    @id @default(auto()) @map("_id") @db.ObjectId
+    name                     String
+    email                    String    @unique
+    password                 String
+    role                     String    @default("ADMIN")
+    passwordResetToken       String?
+    passwordResetTokenExpiry DateTime?
+    isActivated              Boolean   @default(true)
+    createdAt                DateTime  @default(now())
+    updatedAt                DateTime  @default(now()) @updatedAt
+    blogs                    Blog[]
+}
+
+model User {
+    id                       String           @id @default(auto()) @map("_id") @db.ObjectId
+    name                     String
+    phone                    String
+    photo                    String?
+    medicalHistory           String?
+    email                    String           @unique
+    password                 String
+    role                     String           @default("USER")
+    passwordResetToken       String?
+    passwordResetTokenExpiry DateTime?
+    isActivated              Boolean          @default(true)
+    createdAt                DateTime         @default(now())
+    updatedAt                DateTime         @default(now()) @updatedAt
+    AmbulanceOrder           AmbulanceOrder[]
+}
+
+model Staff {
+    id                       String           @id @default(auto()) @map("_id") @db.ObjectId
+    name                     String
+    phone                    String
+    photo                    String?
+    email                    String           @unique
+    password                 String
+    role                     String           @default("STAFF")
+    passwordResetToken       String?
+    passwordResetTokenExpiry DateTime?
+    isActivated              Boolean          @default(true)
+    createdAt                DateTime         @default(now())
+    updatedAt                DateTime         @default(now()) @updatedAt
+    AmbulanceOrder           AmbulanceOrder[]
+}
+
+model Blog {
+    id         String       @id @default(auto()) @map("_id") @db.ObjectId
+    title      String
+    content    String
+    author     Admin        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    authorId   String       @db.ObjectId
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @default(now()) @updatedAt
+    categoryId String       @db.ObjectId
+    category   BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model BlogCategory {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    name      String
+    blogs     Blog[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Define the enum for status
+enum Status {
+    PENDING
+    ACCEPTED
+    CANCELLED
+    COMPLETED
+}
+
+model AmbulanceOrder {
+    id              String   @id @default(auto()) @map("_id") @db.ObjectId
+    userId          String   @db.ObjectId
+    user            User     @relation(fields: [userId], references: [id])
+    staffId         String?  @db.ObjectId
+    staff           Staff?   @relation(fields: [staffId], references: [id])
+    location        String
+    healthCondition String
+    status          Status   @default(PENDING)
+    notes           String?
+    photoUrl        String? // Assuming the photo will be stored as a URL
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @default(now()) @updatedAt
+}
